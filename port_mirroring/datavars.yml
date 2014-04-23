@@ -1,0 +1,38 @@
+---
+mirror_ports:
+    - ge-0/0/1
+    - ge-0/0/2
+    - ge-0/0/3
+    - ge-0/0/4
+    - ge-0/0/5
+    - ge-0/0/6
+    - ge-0/0/7
+    - ge-0/0/8
+    - ge-0/0/9
+    - ge-0/0/10
+
+mirror_ports_vlan:
+    name: v11
+    vlan_id: 11
+
+mirror_vlan:
+    name: mirror 
+    vlan_id: 100
+
+mirror_cable: 
+    from: ge-0/0/11
+    to: ge-0/0/12
+
+mirror_iplist_to_ports:
+    ge-0/0/13:
+        - 10.0.0.1
+        - 10.0.0.2
+        - 10.0.0.3    
+        - 10.0.0.4
+        - 10.0.0.5
+    ge-0/0/14:
+        - 10.0.0.6
+        - 10.0.0.7
+        - 10.0.0.8    
+        - 10.0.0.9
+        - 10.0.0.10

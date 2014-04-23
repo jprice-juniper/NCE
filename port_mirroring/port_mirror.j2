@@ -1,0 +1,116 @@
+{%- macro filter_name(iface) -%}
+  {{ iface|replace("/","_") ~ "_iplist_filter" }}
+{%- endmacro -%}
+
+ethernet-switching-options {
+    analyzer multi-session {
+        input {
+{%- for iface in mirror_ports %}
+            interface {{ iface }}.0;
+{%- endfor %}
+        }
+        egress {
+{%- for iface in mirror_ports %}
+            interface {{ iface }}.0;
+{%- endfor %}
+        }
+        output {
+            interface {{ mirror_cable.from }}.0;
+        }
+    }
+}
+
+interfaces {
+{%- for iface in mirror_ports %}
+    {{ iface }} {
+        unit 0 {
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members {{ mirror_ports_vlan.name }};
+                }
+            }
+        }
+    }
+{%- endfor %}
+    {{ mirror_cable.from }} {
+        unit 0 {
+            family ethernet-switching;
+        }
+    }
+    {{ mirror_cable.to }} {
+        unit 0 {
+            family ethernet-switching {
+                vlan {
+                    members {{ mirror_vlan.name }};
+                }
+            }
+        }
+    }
+{%- for iface in mirror_iplist_to_ports %}
+    {{ iface }} {
+        unit 0 {
+            family ethernet-switching {
+                vlan {
+                    members {{ mirror_vlan.name }};
+                }
+                filter {
+                    output {{ filter_name( iface ) }};
+                }
+            }
+        }
+    }
+{%- endfor %}
+}
+
+protocols {
+    rstp {
+        interface {{ mirror_cable.to }}.0 {
+            disable;
+        }
+{%- for iface in mirror_iplist_to_ports %}
+        interface {{ iface }}.0 {
+            disable;
+        }
+{%- endfor %}
+    }
+}
+
+vlans {
+    {{ mirror_vlan.name }} {
+        vlan-id {{ mirror_vlan.vlan_id }};
+        no-mac-learning;
+    }
+}
+
+firewall {
+    family ethernet-switching {
+{%- for iface in mirror_iplist_to_ports %} 
+        filter {{ filter_name( iface ) }} {
+            term 10 {
+                from {
+                    source-address {
+{%- for ipaddr in mirror_iplist_to_ports[iface] %}
+                        {{ ipaddr }}/32;
+{%- endfor %}
+                    }
+                }
+                then accept;
+            }
+            term 20 {
+                from {
+                    destination-address {
+{%- for ipaddr in mirror_iplist_to_ports[iface] %}
+                        {{ ipaddr }}/32;
+{%- endfor %}
+                    }
+                }
+                then accept;
+            }
+            term default {
+                then discard;
+            }
+        }
+{%- endfor %}
+    }
+}
