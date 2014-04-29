@@ -1,0 +1,86 @@
+security {
+    ike {
+        policy {{ name }} {
+            mode main;
+            proposal-set {{ proposal_set }};
+            pre-shared-key ascii-text "{{ psk }}";
+        }
+        gateway {{ name }} {
+            ike-policy {{ name }};
+            address {{ remote_endpoint }};
+            no-nat-traversal;
+            external-interface {{ external_interface }};
+        }
+    }
+    ipsec {
+        policy {{ name }} {
+            proposal-set {{ proposal_set }};
+        }
+        vpn {{ name }} {
+            bind-interface {{ tunnel_interface }};
+            ike {
+                gateway {{ name }};
+                idle-time 60;
+                no-anti-replay;
+                ipsec-policy {{ name }};
+                install-interval 0;
+            }
+        {%- for local in local_ip %}
+            {%- for remote in remote_ip %}
+            traffic-selector {{ local }}_{{ remote }} {
+                local-ip {{ local }};
+                remote-ip {{ remote }};
+            }
+            {%- endfor %}
+        {%- endfor %}
+        }
+    }
+    address-book {
+        global {
+        {%- for local in local_ip %}
+            address local-{{ local }} {{ local }};
+        {%- endfor %}
+        {%- for remote in remote_ip %}
+            address remote-{{ remote }} {{ remote }};
+        {%- endfor %}
+        }
+    }
+    policies {
+        from-zone {{ trust_zone }} to-zone {{ tunnel_zone }} {
+            policy {{ trust_zone }}-to-{{ tunnel_zone }} {
+                match {
+                    source-address [ {%- for local in local_ip %} local-{{ local }} {%- endfor %} ];
+                    destination-address [ {%- for remote in remote_ip %} remote-{{ remote }} {%- endfor %} ];
+                    application any;
+                }
+                then {
+                    permit;
+                }
+            }
+        }
+        from-zone {{ tunnel_zone }} to-zone {{ trust_zone }} {
+            policy {{ tunnel_zone }}-to-{{ trust_zone }} {
+                match {
+                    source-address [ {%- for remote in remote_ip %} remote-{{ remote }} {%- endfor %} ];
+                    destination-address [ {%- for local in local_ip %} local-{{ local }} {%- endfor %} ];
+                    application any;
+                }
+                then {
+                    permit;
+                }
+            }
+        }
+    }
+    zones {
+        security-zone {{ tunnel_zone }} {
+            host-inbound-traffic {
+                system-services {
+                    ike;
+                }
+            }
+            interfaces {
+                {{ tunnel_interface }};
+            }
+        }
+    }
+}

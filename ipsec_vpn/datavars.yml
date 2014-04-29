@@ -1,0 +1,16 @@
+---
+name: Vendor
+remote_endpoint: 11.11.11.11
+external_interface: reth1.0
+tunnel_interface: st0.1
+tunnel_zone: vpn
+trust_zone: trust
+psk: secretkey
+proposal_set: standard
+local_ip:
+    - 10.1.1.0/24
+    - 192.168.2.0/24
+remote_ip:
+    - 172.16.1.0/24
+    - 10.20.1.5/32
+    - 192.168.4.0/23
