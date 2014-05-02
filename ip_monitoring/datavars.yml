@@ -1,0 +1,11 @@
+---
+probe_name: Probe-Payment-Server
+target: 5.1.1.2
+probes_to_send: 5
+time_between_probes: 5
+time_between_tests: 3
+successive_loss: 5
+destination_interface: fe-0/0/1.0
+target_next_hop: 1.1.1.2
+failover_destination: 5.1.1.0/24
+failover_next_hop: 2.1.1.2

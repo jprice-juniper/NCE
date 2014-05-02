@@ -1,0 +1,31 @@
+services {
+    rpm {
+        probe {{ probe_name }} {
+            test local-isp-test {
+                target address {{ target }};
+                probe-count {{ probes_to_send }};
+                probe-interval {{ time_between_probes }};
+                test-interval {{ time_between_tests }};
+                thresholds {
+                    successive-loss {{ successive_loss }};
+                }
+                destination-interface {{ destination_interface }};
+                next-hop {{ target_next_hop }};
+            }
+        }
+    }
+    ip-monitoring {
+        policy {{ probe_name }} {
+            match {
+                rpm-probe {{ probe_name }};
+            }
+            then {
+                preferred-route {
+                    route {{ failover_destination }} {
+                        next-hop {{ failover_next_hop }};
+                    }
+                }
+            }
+        }
+    }
+}
