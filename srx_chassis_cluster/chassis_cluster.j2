@@ -1,0 +1,131 @@
+## STEP 1: Control port configuration for node0 and node1
+
+chassis {
+    cluster {
+    {%- for port in control_ports %}
+        control-ports {{ port }};
+    {%- endfor %}
+    }
+}
+
+## STEP 2: Enable cluster mode on node0
+
+user@SRX5800-1> set chassis cluster cluster-id 1 node 0 reboot
+
+## STEP 3: Enable cluster mode on node1
+
+user@SRX5800-1> set chassis cluster cluster-id 1 node 1 reboot
+
+## Main chassis cluster configuration
+
+groups {
+    node0 {
+        system {
+            host-name {{ node0_settings['hostname'] }};
+            backup-router {{ node0_settings['gateway'] }} destination 0.0.0.0/0;
+        }
+        interfaces {
+            fxp0 {
+                unit 0 {
+                    family inet {
+                        address {{ node0_settings['ip_address'] }};
+                    }
+                }
+            }
+        }
+    }
+    node1 {
+        system {
+            host-name {{ node1_settings['hostname'] }};
+            backup-router {{ node1_settings['gateway'] }} destination 0.0.0.0/0;
+        }
+        interfaces {
+            fxp0 {
+                unit 0 {
+                    family inet {
+                        address {{ node1_settings['ip_address'] }};
+                    }
+                }
+            }
+        }
+    }
+}
+apply-groups "${node}";
+chassis {
+    cluster {
+        control-link-recovery;
+        reth-count {{ reth_count }};
+        redundancy-group 0 {
+            node 0 priority {{ node0_priority }};
+            node 1 priority {{ node1_priority }};
+        }
+        redundancy-group 1 {
+            node 0 priority {{ node0_priority }};
+            node 1 priority {{ node1_priority }};
+            interface-monitor {
+            {%- for reth in reths %}
+                {%- for interface in reths[reth]['interfaces'] %}
+                {{ interface }} weight 255;
+                {%- endfor %}
+            {%- endfor %}
+            }
+        }
+    }
+}
+interfaces {
+    fab0 {
+        fabric-options {
+            member-interfaces {
+                {{ fab0_interface }};
+            }
+        }
+    }
+    fab1 {
+        fabric-options {
+            member-interfaces {
+                {{ fab1_interface }};
+            }
+        }
+    }
+{%- for reth in reths %}
+    {%- for interface in reths[reth]['interfaces'] %}
+    {{ interface }} {
+        gigether-options {
+            redundant-parent {{ reth }};
+        }
+    }
+    {%- endfor %}
+{%- endfor %}
+{%- for interface in reths %}
+    {{ interface }} {
+        redundant-ether-options {
+            redundancy-group 1;
+        }
+        unit 0 {
+            family inet {
+                address {{ reths[interface]['ip_address'] }};
+            }
+        }
+    }
+{%- endfor %}
+}
+routing-options {
+    static {
+    {%- for route in routes %}
+        route {{ route }} next-hop {{ routes[route] }};
+    {%- endfor %}
+    }
+}
+security {
+    zones {
+    {%- for zone in zones %}
+        security-zone {{ zone }} {
+            interfaces {
+            {%- for interface in zones[zone]['interfaces'] %}
+                {{ interface }};
+            {%- endfor %}
+            }
+        }
+    {%- endfor %}
+    }
+}
