@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 
 import yaml
 import sys
@@ -14,4 +14,4 @@ with open(glob('*.j2')[0]) as t_fh:
     t_format = t_fh.read()
 
 template = Template(t_format)
-print(template.render(data))
+print (template.render(data))
