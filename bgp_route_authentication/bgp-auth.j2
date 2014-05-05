@@ -1,0 +1,29 @@
+security {
+    authentication-key-chains {
+        key-chain {{auth_chain}} {
+            tolerance {{auth_algorithm}};
+            key 0 {                     
+                secret "{{auth_secret_0}}"; ## SECRET-DATA
+                start-time "{{auth_start_time_0}}";
+            }
+            key 1 {
+                secret "{{auth_secret_1}}"; ## SECRET-DATA
+                start-time "{{auth_start_time_1}}";
+            }
+        }
+    }
+}
+routing-options {
+    autonomous-system {{bgp_group_as}};
+}
+protocols {
+    bgp {
+        group ext {
+            type {{bgp_group_type}};
+            authentication-algorithm {{auth_algorithm}};
+            authentication-key-chain {{auth_chain}};
+            peer-as {{bgp_group_peer_as}};
+            neighbor {{bgp_group_neighbor}};        
+        }                               
+    }                                   
+}
