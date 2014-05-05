@@ -1,0 +1,12 @@
+---
+bgp_group_type: external
+bgp_group_peer_as: 65530
+bgp_group_neighbor: 172.16.2.1
+bgp_group_as: 65533
+auth_chain: bgp-auth
+auth_algorithm: md5
+auth_tolerance: 30
+auth_secret_0: this-is-the-secret-password
+auth_start_time_0: 2011-6-23.20:19:33-0700
+auth_secret_1: this-is-another-secret-password
+auth_start_time_1: 2011-6-23.20:19:33-0700
